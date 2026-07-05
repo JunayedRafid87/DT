@@ -149,6 +149,11 @@ def calibrate(df: pd.DataFrame) -> Calibration:
                              aggfunc="mean").reindex(range(24))["solar"]
     solar_h = solar_h.fillna(0).values
     solar_shape = solar_h / solar_h.max() if solar_h.max() > 0 else solar_h
+    # Zero out noise artifacts: any hour whose shape < 5 % of peak is dark.
+    # The raw mean picks up inverter stand-by readings and meter noise at night
+    # (h18-h05), leaving tiny but non-zero values that produce phantom nighttime
+    # solar dispatch and suppress the visible daytime contribution in charts.
+    solar_shape[solar_shape < 0.05] = 0.0
 
     return Calibration(base_demand, diurnal, noise_sd, capacity, avail,
                        solar_shape, growth, base_year)

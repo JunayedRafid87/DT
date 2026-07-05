@@ -455,8 +455,9 @@
     const reserveFloor = options.reserveFloor || 8;
     const displaySeason = getDefaultDisplaySeason(season);
     const seasonData = simResults.filter(r => r.season === displaySeason);
-    // Pick peak hour (hour 19)
-    const peakRow = seasonData.find(r => r.hour === 19) || seasonData[seasonData.length - 1];
+    // Show hour 11 (solar-peak / midday) — hour 19 is post-sunset so solar = 0,
+    // which confuses readers. Hour 11 shows the full dispatch mix including solar.
+    const peakRow = seasonData.find(r => r.hour === 11) || seasonData[seasonData.length - 1];
     if (!peakRow) return;
 
     const dpr = window.devicePixelRatio || 1;
@@ -492,7 +493,7 @@
     ctx.font = '600 11px Inter, sans-serif';
     ctx.textAlign = 'left';
     ctx.fillStyle = isDark ? '#9ca3af' : '#64748b';
-    ctx.fillText(`Peak hour (19:00) · ${displaySeason}`, leftPad, topPad - 8);
+    ctx.fillText(`Midday dispatch (11:00) · ${displaySeason}  — Solar peak hour`, leftPad, topPad - 8);
 
     // Draw bars
     meritSources.forEach((src, i) => {
