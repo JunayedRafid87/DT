@@ -170,7 +170,7 @@
           },
           y: {
             title: { display: true, text: 'Demand (MW)', font: { weight: '600' } },
-            beginAtZero: false,
+            beginAtZero: true,
             grid: { color: 'rgba(0,0,0,0.04)' }
           }
         },
