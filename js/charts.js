@@ -84,8 +84,10 @@
     });
   }
 
-  function updateDispatchChart(chart, simResults, season) {
+  function updateDispatchChart(chart, simResults, options) {
     if (!chart) return;
+    const season = options.season;
+    const reserveFloor = options.reserveFloor || 8;
     const displaySeason = getDefaultDisplaySeason(season);
     const seasonData = simResults.filter(r => r.season === displaySeason);
     if (seasonData.length === 0) return;
@@ -128,6 +130,23 @@
       tension: 0.3,
       stack: undefined,
       order: 0
+    });
+
+    // Required capacity line (Demand + Reserve Margin)
+    datasets.push({
+      label: `Required Cap (${reserveFloor}%)`,
+      data: HOURS.map(h => {
+        const row = seasonData.find(r => r.hour === h);
+        return row ? row.demand * (1 + reserveFloor / 100) : 0;
+      }),
+      borderColor: '#d97706',
+      borderWidth: 2.5,
+      borderDash: [4, 4],
+      fill: false,
+      pointRadius: 0,
+      tension: 0.3,
+      stack: undefined,
+      order: 1
     });
 
     chart.data.datasets = datasets;
@@ -289,7 +308,8 @@
           },
           y: {
             title: { display: true, text: 'Reserve Margin (%)', font: { weight: '600' } },
-            grid: { color: 'rgba(0,0,0,0.04)' }
+            grid: { color: 'rgba(0,0,0,0.04)' },
+            min: 0
           }
         },
         interaction: { mode: 'index', intersect: false },
@@ -340,10 +360,7 @@
       borderWidth: 1.5,
       borderDash: [8, 4],
       pointRadius: 0,
-      fill: {
-        target: 'origin',
-        above: 'rgba(220,38,38,0.06)'
-      }
+      fill: false
     });
 
     chart.data.labels = years;
@@ -378,12 +395,14 @@
     const cellW = (W - leftPad - rightPad) / seasons.length;
     const cellH = (H - topPad - bottomPad) / sources.length;
 
+    const isDark = document.body.classList.contains('dark-theme');
+
     ctx.clearRect(0, 0, W, H);
 
     // Column headers
     ctx.font = '600 10px Inter, sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillStyle = '#64748b';
+    ctx.fillStyle = isDark ? '#9ca3af' : '#64748b';
     seasons.forEach((s, j) => {
       ctx.fillText(s, leftPad + j * cellW + cellW / 2, topPad - 10);
     });
@@ -393,7 +412,7 @@
       // Row label
       ctx.textAlign = 'right';
       ctx.font = '600 11px Inter, sans-serif';
-      ctx.fillStyle = '#1a1a2e';
+      ctx.fillStyle = isDark ? '#f3f4f6' : '#1a1a2e';
       ctx.fillText(SAED.SOURCE_LABELS[src], leftPad - 10, topPad + i * cellH + cellH / 2 + 4);
 
       seasons.forEach((season, j) => {
@@ -401,36 +420,42 @@
         const x = leftPad + j * cellW;
         const y = topPad + i * cellH;
 
-        // Cell color interpolation: white → teal
-        const r = Math.round(255 - alpha * (255 - 13));
-        const g = Math.round(255 - alpha * (255 - 148));
-        const b = Math.round(255 - alpha * (255 - 136));
+        // Cell color interpolation: background-neutral → teal-accent
+        // In dark mode, start from dark-gray (#1f2937 = rgb(31,41,55))
+        const startR = isDark ? 31 : 255;
+        const startG = isDark ? 41 : 255;
+        const startB = isDark ? 55 : 255;
+        const r = Math.round(startR - alpha * (startR - 13));
+        const g = Math.round(startG - alpha * (startG - 148));
+        const b = Math.round(startB - alpha * (startB - 136));
         ctx.fillStyle = `rgb(${r},${g},${b})`;
         ctx.beginPath();
         ctx.roundRect(x + 2, y + 2, cellW - 4, cellH - 4, 4);
         ctx.fill();
 
         // Border
-        ctx.strokeStyle = 'rgba(0,0,0,0.06)';
+        ctx.strokeStyle = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
         ctx.lineWidth = 1;
         ctx.stroke();
 
         // Value text
         ctx.textAlign = 'center';
         ctx.font = '700 12px "SF Mono", monospace';
-        ctx.fillStyle = alpha > 0.5 ? '#fff' : '#1a1a2e';
+        ctx.fillStyle = alpha > 0.5 ? '#fff' : (isDark ? '#f3f4f6' : '#1a1a2e');
         ctx.fillText(alpha.toFixed(2), x + cellW / 2, y + cellH / 2 + 5);
       });
     });
   }
 
   // ── Chart 6: Merit Order Waterfall (horizontal bar) ──────────────
-  function drawMeritOrder(simResults, season) {
+  function drawMeritOrder(simResults, options) {
     const canvas = document.getElementById('chart-merit');
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     const SAED = window.SAED;
 
+    const season = options.season;
+    const reserveFloor = options.reserveFloor || 8;
     const displaySeason = getDefaultDisplaySeason(season);
     const seasonData = simResults.filter(r => r.season === displaySeason);
     // Pick peak hour (hour 19)
@@ -467,10 +492,12 @@
     const maxVal = Math.max(demand, totalCap) * 1.1;
     const scale = chartW / maxVal;
 
+    const isDark = document.body.classList.contains('dark-theme');
+
     // Title
     ctx.font = '600 11px Inter, sans-serif';
     ctx.textAlign = 'left';
-    ctx.fillStyle = '#64748b';
+    ctx.fillStyle = isDark ? '#9ca3af' : '#64748b';
     ctx.fillText(`Peak hour (19:00) · ${displaySeason}`, leftPad, topPad - 8);
 
     // Draw bars
@@ -482,7 +509,7 @@
       // Label
       ctx.textAlign = 'right';
       ctx.font = '600 11px Inter, sans-serif';
-      ctx.fillStyle = '#1a1a2e';
+      ctx.fillStyle = isDark ? '#f3f4f6' : '#1a1a2e';
       ctx.fillText(SAED.SOURCE_LABELS[src], leftPad - 10, y + barH / 2 + 4);
 
       // Bar
@@ -501,7 +528,7 @@
         } else if (mw > 0) {
           ctx.textAlign = 'left';
           ctx.font = '600 10px Inter, sans-serif';
-          ctx.fillStyle = '#1a1a2e';
+          ctx.fillStyle = isDark ? '#f3f4f6' : '#1a1a2e';
           ctx.fillText(`${Math.round(mw)}`, leftPad + barWidth + 4, y + barH / 2 + 4);
         }
       }
@@ -525,17 +552,35 @@
     ctx.fillStyle = '#dc2626';
     ctx.fillText(`Demand: ${Math.round(demand).toLocaleString()} MW`, demandX, totalH + 16);
 
+    // Required Capacity dashed line
+    const reqCap = demand * (1 + reserveFloor / 100);
+    const reqCapX = leftPad + reqCap * scale;
+    ctx.setLineDash([4, 4]);
+    ctx.strokeStyle = '#d97706';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(reqCapX, topPad - 4);
+    ctx.lineTo(reqCapX, totalH);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Required Capacity label
+    ctx.textAlign = 'center';
+    ctx.font = '700 10px Inter, sans-serif';
+    ctx.fillStyle = '#d97706';
+    ctx.fillText(`Min Req: ${Math.round(reqCap).toLocaleString()} MW`, reqCapX, totalH + 28);
+
     // X-axis
     ctx.font = '500 10px Inter, sans-serif';
-    ctx.fillStyle = '#64748b';
+    ctx.fillStyle = isDark ? '#9ca3af' : '#64748b';
     ctx.textAlign = 'center';
     const ticks = 5;
     for (let i = 0; i <= ticks; i++) {
       const val = (maxVal / ticks) * i;
       const x = leftPad + val * scale;
-      ctx.fillText(Math.round(val).toLocaleString(), x, totalH + 30);
+      ctx.fillText(Math.round(val).toLocaleString(), x, totalH + 42);
       // Tick line
-      ctx.strokeStyle = 'rgba(0,0,0,0.06)';
+      ctx.strokeStyle = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)';
       ctx.lineWidth = 1;
       ctx.beginPath();
       ctx.moveTo(x, topPad - 4);
@@ -559,11 +604,11 @@
       if (!simResults || !cal) return;
 
       // Always update these 4
-      updateDispatchChart(chartDispatch, simResults, options.season);
+      updateDispatchChart(chartDispatch, simResults, options);
       updateDemandChart(chartDemand, cal, options);
       updateCostChart(chartCost, simResults);
       drawHeatmap(cal);
-      drawMeritOrder(simResults, options.season);
+      drawMeritOrder(simResults, options);
 
       // Stress chart: only update on meaningful param changes
       const stressKey = JSON.stringify({
