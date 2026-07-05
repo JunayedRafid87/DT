@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SAED Digital Twin — Bangladesh Power Grid Economic Dispatch</title>
+  
+  <meta name="description" content="An interactive research dashboard and digital twin for the Bangladesh power system, executing a seasonal-aware economic dispatch algorithm calibrated from PGCB hourly records.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+  <!-- Hero Header -->
+  <header class="hero">
+    <div class="hero-inner">
+      <div class="hero-eyebrow">Bangladesh Power Grid · PGCB · 2015–2025</div>
+      <h1 class="hero-title">SAED Digital Twin <span>Seasonal-Aware Economic Dispatch Simulation</span></h1>
+      <p class="hero-sub">
+        An interactive virtual copy of the Bangladesh national power grid. Ported entirely to JavaScript, this digital twin runs optimal dispatch simulations in real-time based on 10 years of historical data.
+      </p>
+      <div class="hero-badge">Based on ~92,650 hourly records</div>
+    </div>
+  </header>
+
+  <!-- Sticky Tabs Navigation -->
+  <nav class="nav-tabs">
+    <div class="nav-tabs-inner">
+      <button class="nav-tab active" data-tab="dashboard">
+        📊 The Twin Dashboard
+        <div class="tab-desc">Parameters & real-time charts</div>
+      </button>
+      <button class="nav-tab" data-tab="pipeline">
+        📋 Data Pipeline
+        <div class="tab-desc">Interactive processing flowchart</div>
+      </button>
+      <button class="nav-tab" data-tab="about">
+        💡 Key Findings
+        <div class="tab-desc">Grid physics & research results</div>
+      </button>
+    </div>
+  </nav>
+
+  <!-- 1. DASHBOARD TAB CONTENT -->
+  <main id="tab-dashboard" class="tab-content active">
+    <div class="dashboard-layout">
+      
+      <!-- Sidebar Control Panel -->
+      <aside class="sidebar">
+        <div class="control-panel">
+          <div class="panel-header">
+            <h3>Simulation Parameters</h3>
+            <p>Adjust parameters to run dispatch live</p>
+          </div>
+
+          <!-- Section: Scenario Options -->
+          <div class="section-collapse open">
+            <button class="section-toggle" aria-expanded="true">
+              Scenario
+              <span class="chevron">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+              </span>
+            </button>
+            <div class="section-body">
+              <div class="section-body-inner">
+                
+                <div class="control-row">
+                  <label class="control-label" for="select-season">Display Season</label>
+                  <select id="select-season" class="control-select">
+                    <option value="all" selected>All Seasons (Aggregated)</option>
+                    <option value="Winter">Winter</option>
+                    <option value="PreMonsoon">Pre-monsoon</option>
+                    <option value="Monsoon">Monsoon</option>
+                    <option value="PostMonsoon">Post-monsoon</option>
+                  </select>
+                </div>
+
+                <div class="control-row">
+                  <label class="control-label" for="slider-year">
+                    Scenario Year
+                    <span id="val-year" class="value-display">2025</span>
+                  </label>
+                  <input type="range" id="slider-year" min="2025" max="2035" value="2025" step="1">
+                </div>
+
+                <div class="control-row">
+                  <label class="control-label" for="slider-growth">
+                    Demand Growth Rate
+                    <span id="val-growth" class="value-display">7.9%</span>
+                  </label>
+                  <input type="range" id="slider-growth" min="0" max="15" value="7.9" step="0.1">
+                </div>
+
+                <div class="control-row">
+                  <label class="control-label" for="slider-reserve">
+                    Reserve Margin Floor
+                    <span id="val-reserve" class="value-display">8.0%</span>
+                  </label>
+                  <input type="range" id="slider-reserve" min="0" max="25" value="8" step="0.5">
+                </div>
+
+                <div class="control-row toggle-wrap">
+                  <div class="toggle-switch">
+                    <input type="checkbox" id="chk-stochastic">
+                    <span class="toggle-slider"></span>
+                  </div>
+                  <label class="control-label" for="chk-stochastic" style="margin-bottom:0; cursor:pointer;">Stochastic Noise</label>
+                </div>
+
+              </div>
+            </div>
+          </div>
+
+          <!-- Section: Firm Capacity (MW) -->
+          <div class="section-collapse">
+            <button class="section-toggle" aria-expanded="false">
+              Firm Capacity (MW)
+              <span class="chevron">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+              </span>
+            </button>
+            <div class="section-body">
+              <div class="section-body-inner">
+                <div class="control-row">
+                  <label class="control-label" for="slider-cap-solar">
+                    <span><span class="source-dot" style="background:#E69F00;"></span>Solar</span>
+                    <span id="val-cap-solar" class="value-display">— MW</span>
+                  </label>
+                  <input type="range" id="slider-cap-solar" min="0" max="1000" value="374">
+                </div>
+                <div class="control-row">
+                  <label class="control-label" for="slider-cap-hydro">
+                    <span><span class="source-dot" style="background:#56B4E9;"></span>Hydro</span>
+                    <span id="val-cap-hydro" class="value-display">— MW</span>
+                  </label>
+                  <input type="range" id="slider-cap-hydro" min="0" max="1000" value="223">
+                </div>
+                <div class="control-row">
+                  <label class="control-label" for="slider-cap-gas">
+                    <span><span class="source-dot" style="background:#009E73;"></span>Natural Gas</span>
+                    <span id="val-cap-gas" class="value-display">— MW</span>
+                  </label>
+                  <input type="range" id="slider-cap-gas" min="0" max="20000" value="6816">
+                </div>
+                <div class="control-row">
+                  <label class="control-label" for="slider-cap-coal">
+                    <span><span class="source-dot" style="background:#555555;"></span>Coal</span>
+                    <span id="val-cap-coal" class="value-display">— MW</span>
+                  </label>
+                  <input type="range" id="slider-cap-coal" min="0" max="10000" value="4090">
+                </div>
+                <div class="control-row">
+                  <label class="control-label" for="slider-cap-imports">
+                    <span><span class="source-dot" style="background:#CC79A7;"></span>Imports</span>
+                    <span id="val-cap-imports" class="value-display">— MW</span>
+                  </label>
+                  <input type="range" id="slider-cap-imports" min="0" max="5000" value="2044">
+                </div>
+                <div class="control-row">
+                  <label class="control-label" for="slider-cap-liquid_fuel">
+                    <span><span class="source-dot" style="background:#D55E00;"></span>Liquid Fuel</span>
+                    <span id="val-cap-liquid_fuel" class="value-display">— MW</span>
+                  </label>
+                  <input type="range" id="slider-cap-liquid_fuel" min="0" max="10000" value="4308">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section: Marginal Cost ($/MWh) -->
+          <div class="section-collapse">
+            <button class="section-toggle" aria-expanded="false">
+              Marginal Cost ($/MWh)
+              <span class="chevron">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+              </span>
+            </button>
+            <div class="section-body">
+              <div class="section-body-inner">
+                <div class="control-row">
+                  <label class="control-label" for="slider-cost-solar">
+                    <span><span class="source-dot" style="background:#E69F00;"></span>Solar</span>
+                    <span id="val-cost-solar" class="value-display">$0</span>
+                  </label>
+                  <input type="range" id="slider-cost-solar" min="0" max="300" value="0">
+                </div>
+                <div class="control-row">
+                  <label class="control-label" for="slider-cost-hydro">
+                    <span><span class="source-dot" style="background:#56B4E9;"></span>Hydro</span>
+                    <span id="val-cost-hydro" class="value-display">$5</span>
+                  </label>
+                  <input type="range" id="slider-cost-hydro" min="0" max="300" value="5">
+                </div>
+                <div class="control-row">
+                  <label class="control-label" for="slider-cost-gas">
+                    <span><span class="source-dot" style="background:#009E73;"></span>Natural Gas</span>
+                    <span id="val-cost-gas" class="value-display">$45</span>
+                  </label>
+                  <input type="range" id="slider-cost-gas" min="0" max="300" value="45">
+                </div>
+                <div class="control-row">
+                  <label class="control-label" for="slider-cost-coal">
+                    <span><span class="source-dot" style="background:#555555;"></span>Coal</span>
+                    <span id="val-cost-coal" class="value-display">$65</span>
+                  </label>
+                  <input type="range" id="slider-cost-coal" min="0" max="300" value="65">
+                </div>
+                <div class="control-row">
+                  <label class="control-label" for="slider-cost-imports">
+                    <span><span class="source-dot" style="background:#CC79A7;"></span>Imports</span>
+                    <span id="val-cost-imports" class="value-display">$75</span>
+                  </label>
+                  <input type="range" id="slider-cost-imports" min="0" max="300" value="75">
+                </div>
+                <div class="control-row">
+                  <label class="control-label" for="slider-cost-liquid_fuel">
+                    <span><span class="source-dot" style="background:#D55E00;"></span>Liquid Fuel</span>
+                    <span id="val-cost-liquid_fuel" class="value-display">$180</span>
+                  </label>
+                  <input type="range" id="slider-cost-liquid_fuel" min="0" max="300" value="180">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section: Seasonal Availability -->
+          <div class="section-collapse">
+            <button class="section-toggle" aria-expanded="false">
+              Seasonal Availability
+              <span class="chevron">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+              </span>
+            </button>
+            <div class="section-body">
+              <div class="section-body-inner">
+                <table class="avail-matrix">
+                  <thead>
+                    <tr>
+                      <th>Source</th>
+                      <th>Win</th>
+                      <th>Pre</th>
+                      <th>Mon</th>
+                      <th>Post</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>Solar</td>
+                      <td><input type="number" id="avail-solar-Winter" class="avail-input" min="0" max="1" step="0.01"></td>
+                      <td><input type="number" id="avail-solar-PreMonsoon" class="avail-input" min="0" max="1" step="0.01"></td>
+                      <td><input type="number" id="avail-solar-Monsoon" class="avail-input" min="0" max="1" step="0.01"></td>
+                      <td><input type="number" id="avail-solar-PostMonsoon" class="avail-input" min="0" max="1" step="0.01"></td>
+                    </tr>
+                    <tr>
+                      <td>Hydro</td>
+                      <td><input type="number" id="avail-hydro-Winter" class="avail-input" min="0" max="1" step="0.01"></td>
+                      <td><input type="number" id="avail-hydro-PreMonsoon" class="avail-input" min="0" max="1" step="0.01"></td>
+                      <td><input type="number" id="avail-hydro-Monsoon" class="avail-input" min="0" max="1" step="0.01"></td>
+                      <td><input type="number" id="avail-hydro-PostMonsoon" class="avail-input" min="0" max="1" step="0.01"></td>
+                    </tr>
+                    <tr>
+                      <td>Gas</td>
+                      <td><input type="number" id="avail-gas-Winter" class="avail-input" min="0" max="1" step="0.01"></td>
+                      <td><input type="number" id="avail-gas-PreMonsoon" class="avail-input" min="0" max="1" step="0.01"></td>
+                      <td><input type="number" id="avail-gas-Monsoon" class="avail-input" min="0" max="1" step="0.01"></td>
+                      <td><input type="number" id="avail-gas-PostMonsoon" class="avail-input" min="0" max="1" step="0.01"></td>
+                    </tr>
+                    <tr>
+                      <td>Coal</td>
+                      <td><input type="number" id="avail-coal-Winter" class="avail-input" min="0" max="1" step="0.01"></td>
+                      <td><input type="number" id="avail-coal-PreMonsoon" class="avail-input" min="0" max="1" step="0.01"></td>
+                      <td><input type="number" id="avail-coal-Monsoon" class="avail-input" min="0" max="1" step="0.01"></td>
+                      <td><input type="number" id="avail-coal-PostMonsoon" class="avail-input" min="0" max="1" step="0.01"></td>
+                    </tr>
+                    <tr>
+                      <td>Imports</td>
+                      <td><input type="number" id="avail-imports-Winter" class="avail-input" min="0" max="1" step="0.01"></td>
+                      <td><input type="number" id="avail-imports-PreMonsoon" class="avail-input" min="0" max="1" step="0.01"></td>
+                      <td><input type="number" id="avail-imports-Monsoon" class="avail-input" min="0" max="1" step="0.01"></td>
+                      <td><input type="number" id="avail-imports-PostMonsoon" class="avail-input" min="0" max="1" step="0.01"></td>
+                    </tr>
+                    <tr>
+                      <td>Liq. Fuel</td>
+                      <td><input type="number" id="avail-liquid_fuel-Winter" class="avail-input" min="0" max="1" step="0.01"></td>
+                      <td><input type="number" id="avail-liquid_fuel-PreMonsoon" class="avail-input" min="0" max="1" step="0.01"></td>
+                      <td><input type="number" id="avail-liquid_fuel-Monsoon" class="avail-input" min="0" max="1" step="0.01"></td>
+                      <td><input type="number" id="avail-liquid_fuel-PostMonsoon" class="avail-input" min="0" max="1" step="0.01"></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <div style="padding:0 18px 16px;">
+            <button id="btn-reset" class="btn-reset">Reset to Defaults</button>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Main Dashboard Panels -->
+      <section class="main-content">
+        
+        <!-- KPI Cards Grid -->
+        <div class="kpi-bar">
+          <div class="kpi-card">
+            <div class="kpi-label">Operating Cost</div>
+            <div class="kpi-value" id="kpi-cost-val">—</div>
+            <div class="kpi-unit">k$ / day</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Carbon Emissions</div>
+            <div class="kpi-value" id="kpi-co2-val">—</div>
+            <div class="kpi-unit">kt CO₂ / day</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Average Cost</div>
+            <div class="kpi-value" id="kpi-avg-cost-val">—</div>
+            <div class="kpi-unit">$/MWh</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Min Reserve Margin</div>
+            <div class="kpi-value" id="kpi-reserve-val">—</div>
+            <div class="kpi-unit">Worst Hour %</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Load Shedding</div>
+            <div class="kpi-value" id="kpi-shed-val">—</div>
+            <div class="kpi-unit">Daily MW</div>
+          </div>
+        </div>
+
+        <!-- Charts Container Grid -->
+        <div class="charts-grid">
+          
+          <div class="chart-container" id="chart-container-dispatch" style="grid-column: span 2;">
+            <h4 class="chart-title"><span class="chart-icon">⚡</span> Merit-Order Dispatch Stack</h4>
+            <div class="chart-wrap">
+              <canvas id="chart-dispatch"></canvas>
+            </div>
+          </div>
+
+          <div class="chart-container" id="chart-container-merit">
+            <h4 class="chart-title"><span class="chart-icon">⚖️</span> Peak Dispatch Waterfall (Hour 19)</h4>
+            <div class="chart-wrap">
+              <canvas id="chart-merit"></canvas>
+            </div>
+          </div>
+
+          <div class="chart-container" id="chart-container-demand">
+            <h4 class="chart-title"><span class="chart-icon">📈</span> Calibrated Demand Profiles</h4>
+            <div class="chart-wrap">
+              <canvas id="chart-demand"></canvas>
+            </div>
+          </div>
+
+          <div class="chart-container" id="chart-container-cost">
+            <h4 class="chart-title"><span class="chart-icon">💰</span> Seasonal Cost & CO₂</h4>
+            <div class="chart-wrap">
+              <canvas id="chart-cost"></canvas>
+            </div>
+          </div>
+
+          <div class="chart-container" id="chart-container-stress">
+            <h4 class="chart-title"><span class="chart-icon">⚠️</span> Long-Term Reserve Margin Stress Test</h4>
+            <div class="chart-wrap">
+              <canvas id="chart-stress"></canvas>
+            </div>
+          </div>
+
+          <div class="chart-container" id="chart-container-heatmap" style="grid-column: span 3; min-height: 280px;">
+            <h4 class="chart-title"><span class="chart-icon">🌡️</span> Calibrated Seasonal Availability Matrix (α)</h4>
+            <div class="chart-wrap">
+              <canvas id="chart-heatmap"></canvas>
+            </div>
+          </div>
+
+        </div>
+
+      </section>
+    </div>
+  </main>
+
+  <!-- 2. DATA PIPELINE TAB CONTENT -->
+  <section id="tab-pipeline" class="tab-content">
+    <div class="pipeline-container">
+      <h2 style="text-align: center; margin-bottom: 8px; color: var(--navy);">Grid Processing & Calibration Pipeline</h2>
+      <p style="text-align: center; color: var(--text-muted); margin-bottom: 24px; max-width: 600px; margin-left: auto; margin-right: auto;">
+        Click on any stage in the flow chart below to explore how PGCB historical records are converted into an active digital twin.
+      </p>
+
+      <!-- Flowchart Interactive Target -->
+      <div id="flowchart-container"></div>
+
+      <!-- Detail Panel -->
+      <div id="flowchart-info" class="flowchart-info">
+        <p style="text-align:center; color: var(--text-muted);">Click a node above to inspect details...</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. KEY FINDINGS / ABOUT TAB CONTENT -->
+  <section id="tab-about" class="tab-content">
+    <div class="pipeline-container" style="max-width:960px;">
+      <h2 style="color: var(--navy); margin-bottom: 12px;">SAED Digital Twin Findings</h2>
+      <p style="font-size: 15px; line-height: 1.7; color: #444; margin-bottom: 28px;">
+        Economic dispatch ensures electricity demand is served optimally across grid components. By simulating this using a digital twin calibrated with ten years of historical PGCB grid data (2015–2025), we analyzed operational patterns, cost boundaries, and limits governing Bangladesh's transmission network.
+      </p>
+
+      <div style="display: grid; grid-template-columns: 1fr; gap: 20px; margin-bottom: 40px;">
+        
+        <!-- Finding 1 -->
+        <div style="background:#fef2f2; border: 1px solid #fca5a5; border-left: 5px solid var(--red); border-radius: 12px; padding: 24px;">
+          <h3 style="color: var(--red); font-size:16px; margin-bottom:8px;">1. Operational Savings on Expensive Fuel Peak Units</h3>
+          <p style="font-size:13.5px; color:#444; line-height:1.65; margin-bottom:12px;">
+            The grid historically relied heavily on liquid fuel peaking generators costing $180/MWh. Under the SAED optimal merit-order dispatch, liquid fuel generation is mostly bypassed in 2025, substituting cheaper gas ($45/MWh) and coal ($65/MWh). This reveals significant recoverable grid efficiencies.
+          </p>
+          <span style="font-family: var(--mono); font-weight:700; color:var(--red); font-size:13px;">Liquid Fuel cost ($180/MWh) vs Gas ($45/MWh)</span>
+        </div>
+
+        <!-- Finding 2 -->
+        <div style="background:#eff6ff; border: 1px solid #93c5fd; border-left: 5px solid var(--color-winter); border-radius: 12px; padding: 24px;">
+          <h3 style="color: var(--color-winter); font-size:16px; margin-bottom:8px;">2. Governing Power with Seasonality Coefficients (α Matrix)</h3>
+          <p style="font-size:13.5px; color:#444; line-height:1.65; margin-bottom:12px;">
+            Availability metrics dictate the seasonal fuel mix. Hydroelectric dispatch ranges from 41% availability in winter (due to low water levels) up to 100% capacity in the monsoon season. Solar peaks in the pre-monsoon (100%) but scales back to 69% in the monsoon due to cloud cover.
+          </p>
+          <span style="font-family: var(--mono); font-weight:700; color:var(--color-winter); font-size:13px;">Hydro limits: α = 0.41 (Winter) → 1.00 (Monsoon)</span>
+        </div>
+
+        <!-- Finding 3 -->
+        <div style="background:#fffbeb; border: 1px solid #fcd34d; border-left: 5px solid var(--amber); border-radius: 12px; padding: 24px;">
+          <h3 style="color: var(--amber); font-size:16px; margin-bottom:8px;">3. Grid Safety Breach during Monsoon Peaks by ~2030</h3>
+          <p style="font-size:13.5px; color:#444; line-height:1.65; margin-bottom:12px;">
+            Bangladesh's grid demand grows log-linearly at ~7.9% per year. Stress test projections demonstrate that reserve margins are breached below the safety planning floor of 8% first during high-temperature monsoon peak evenings around the years 2029–2030.
+          </p>
+          <span style="font-family: var(--mono); font-weight:700; color:var(--amber); font-size:13px;">Safety Limit violation forecast: Year ~2029–2030</span>
+        </div>
+
+      </div>
+
+      <div style="background:var(--bg-card); border:1px solid var(--border); border-radius:12px; padding:28px; margin-bottom:40px; box-shadow: var(--shadow);">
+        <h3 style="color: var(--navy); margin-bottom:12px;">Calibration Metrics</h3>
+        <p style="font-size:13.5px; color:var(--text-muted); line-height:1.65; margin-bottom:16px;">
+          When validating the SAED digital twin's optimal merit-order dispatch results against historical generation mixes, the mean absolute error (MAE) ranges between 581 MW and 1,036 MW depending on the season. This represents a deliberate divergence, reflecting real-world fuel supply constraints, transmission congestion, and scheduling delays.
+        </p>
+        <table style="width:100%; border-collapse:collapse; text-align:left; font-size:13px;">
+          <thead>
+            <tr style="border-bottom: 2px solid var(--border);">
+              <th style="padding:8px 0; color:var(--navy);">Season</th>
+              <th style="padding:8px 0; color:var(--navy);">MAE (MW)</th>
+              <th style="padding:8px 0; color:var(--navy);">Interpretation</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="border-bottom: 1px solid var(--border-light);">
+              <td style="padding:8px 0; font-weight:600;">Winter</td>
+              <td style="padding:8px 0; font-family:var(--mono);">581 MW</td>
+              <td style="padding:8px 0; color:var(--text-muted);">Stable base load operation, minimal peaking required.</td>
+            </tr>
+            <tr style="border-bottom: 1px solid var(--border-light);">
+              <td style="padding:8px 0; font-weight:600;">Pre-monsoon</td>
+              <td style="padding:8px 0; font-family:var(--mono);">902 MW</td>
+              <td style="padding:8px 0; color:var(--text-muted);">Transition period, solar ramp updates active.</td>
+            </tr>
+            <tr style="border-bottom: 1px solid var(--border-light);">
+              <td style="padding:8px 0; font-weight:600;">Monsoon</td>
+              <td style="padding:8px 0; font-family:var(--mono);">1,036 MW</td>
+              <td style="padding:8px 0; color:var(--text-muted);">Highest load uncertainty, peaking dispatch active.</td>
+            </tr>
+            <tr style="border-bottom: 1px solid var(--border-light);">
+              <td style="padding:8px 0; font-weight:600;">Post-monsoon</td>
+              <td style="padding:8px 0; font-family:var(--mono);">775 MW</td>
+              <td style="padding:8px 0; color:var(--text-muted);">Post-peak cool down, stable dispatch.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer style="background:var(--navy); color:#fff; text-align:center; padding:32px 16px; border-top: 1px solid rgba(255,255,255,0.08); font-size:13px;">
+    <p style="margin-bottom:8px; opacity:0.85;">
+      SAED Digital Twin · Seasonal-Aware Economic Dispatch Dashboard
+    </p>
+    <p style="margin-bottom:16px; opacity:0.65; font-size:11px;">
+      Calibrated from historical PGCB grid data (2015–2025)
+    </p>
+    <a href="https://github.com/JunayedRafid87" target="_blank" style="color:var(--teal-light); font-weight:600;">GitHub Repository: JunayedRafid87</a>
+  </footer>
+
+  <!-- CDN scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script src="js/saed-engine.js"></script>
+  <script src="js/charts.js"></script>
+  <script src="js/flowchart.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
