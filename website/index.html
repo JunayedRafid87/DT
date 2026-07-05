@@ -120,183 +120,42 @@
             </div>
           </div>
 
-          <!-- Section: Firm Capacity (MW) -->
+          <!-- Section: Model Predictions (read-only) -->
           <div class="section-collapse">
             <button class="section-toggle" aria-expanded="false">
-              Firm Capacity (MW)
+              Model Predictions
               <span class="chevron">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
               </span>
             </button>
             <div class="section-body">
               <div class="section-body-inner">
-                <div class="control-row">
-                  <label class="control-label" for="slider-cap-solar">
-                    <span><span class="source-dot" style="background:#E69F00;"></span>Solar</span>
-                    <span id="val-cap-solar" class="value-display">— MW</span>
-                  </label>
-                  <input type="range" id="slider-cap-solar" min="0" max="1000" value="374">
-                </div>
-                <div class="control-row">
-                  <label class="control-label" for="slider-cap-hydro">
-                    <span><span class="source-dot" style="background:#56B4E9;"></span>Hydro</span>
-                    <span id="val-cap-hydro" class="value-display">— MW</span>
-                  </label>
-                  <input type="range" id="slider-cap-hydro" min="0" max="1000" value="223">
-                </div>
-                <div class="control-row">
-                  <label class="control-label" for="slider-cap-gas">
-                    <span><span class="source-dot" style="background:#009E73;"></span>Natural Gas</span>
-                    <span id="val-cap-gas" class="value-display">— MW</span>
-                  </label>
-                  <input type="range" id="slider-cap-gas" min="0" max="20000" value="6816">
-                </div>
-                <div class="control-row">
-                  <label class="control-label" for="slider-cap-coal">
-                    <span><span class="source-dot" style="background:#555555;"></span>Coal</span>
-                    <span id="val-cap-coal" class="value-display">— MW</span>
-                  </label>
-                  <input type="range" id="slider-cap-coal" min="0" max="10000" value="4090">
-                </div>
-                <div class="control-row">
-                  <label class="control-label" for="slider-cap-imports">
-                    <span><span class="source-dot" style="background:#CC79A7;"></span>Imports</span>
-                    <span id="val-cap-imports" class="value-display">— MW</span>
-                  </label>
-                  <input type="range" id="slider-cap-imports" min="0" max="5000" value="2044">
-                </div>
-                <div class="control-row">
-                  <label class="control-label" for="slider-cap-liquid_fuel">
-                    <span><span class="source-dot" style="background:#D55E00;"></span>Liquid Fuel</span>
-                    <span id="val-cap-liquid_fuel" class="value-display">— MW</span>
-                  </label>
-                  <input type="range" id="slider-cap-liquid_fuel" min="0" max="10000" value="4308">
-                </div>
-              </div>
-            </div>
-          </div>
+                <p class="model-note">These values are predicted from the PGCB historical record and cannot be manually adjusted.</p>
 
-          <!-- Section: Marginal Cost ($/MWh) -->
-          <div class="section-collapse">
-            <button class="section-toggle" aria-expanded="false">
-              Marginal Cost ($/MWh)
-              <span class="chevron">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-              </span>
-            </button>
-            <div class="section-body">
-              <div class="section-body-inner">
-                <div class="control-row">
-                  <label class="control-label" for="slider-cost-solar">
-                    <span><span class="source-dot" style="background:#E69F00;"></span>Solar</span>
-                    <span id="val-cost-solar" class="value-display">$0</span>
-                  </label>
-                  <input type="range" id="slider-cost-solar" min="0" max="300" value="0">
+                <div class="model-subsection-label">Firm Capacity (MW)</div>
+                <div class="model-table-wrap">
+                  <table class="model-table">
+                    <tbody id="model-cap-body"></tbody>
+                  </table>
                 </div>
-                <div class="control-row">
-                  <label class="control-label" for="slider-cost-hydro">
-                    <span><span class="source-dot" style="background:#56B4E9;"></span>Hydro</span>
-                    <span id="val-cost-hydro" class="value-display">$5</span>
-                  </label>
-                  <input type="range" id="slider-cost-hydro" min="0" max="300" value="5">
-                </div>
-                <div class="control-row">
-                  <label class="control-label" for="slider-cost-gas">
-                    <span><span class="source-dot" style="background:#009E73;"></span>Natural Gas</span>
-                    <span id="val-cost-gas" class="value-display">$45</span>
-                  </label>
-                  <input type="range" id="slider-cost-gas" min="0" max="300" value="45">
-                </div>
-                <div class="control-row">
-                  <label class="control-label" for="slider-cost-coal">
-                    <span><span class="source-dot" style="background:#555555;"></span>Coal</span>
-                    <span id="val-cost-coal" class="value-display">$65</span>
-                  </label>
-                  <input type="range" id="slider-cost-coal" min="0" max="300" value="65">
-                </div>
-                <div class="control-row">
-                  <label class="control-label" for="slider-cost-imports">
-                    <span><span class="source-dot" style="background:#CC79A7;"></span>Imports</span>
-                    <span id="val-cost-imports" class="value-display">$75</span>
-                  </label>
-                  <input type="range" id="slider-cost-imports" min="0" max="300" value="75">
-                </div>
-                <div class="control-row">
-                  <label class="control-label" for="slider-cost-liquid_fuel">
-                    <span><span class="source-dot" style="background:#D55E00;"></span>Liquid Fuel</span>
-                    <span id="val-cost-liquid_fuel" class="value-display">$180</span>
-                  </label>
-                  <input type="range" id="slider-cost-liquid_fuel" min="0" max="300" value="180">
-                </div>
-              </div>
-            </div>
-          </div>
 
-          <!-- Section: Seasonal Availability -->
-          <div class="section-collapse">
-            <button class="section-toggle" aria-expanded="false">
-              Seasonal Availability
-              <span class="chevron">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-              </span>
-            </button>
-            <div class="section-body">
-              <div class="section-body-inner">
-                <table class="avail-matrix">
-                  <thead>
-                    <tr>
-                      <th>Source</th>
-                      <th>Win</th>
-                      <th>Pre</th>
-                      <th>Mon</th>
-                      <th>Post</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td>Solar</td>
-                      <td><input type="number" id="avail-solar-Winter" class="avail-input" min="0" max="1" step="0.01"></td>
-                      <td><input type="number" id="avail-solar-PreMonsoon" class="avail-input" min="0" max="1" step="0.01"></td>
-                      <td><input type="number" id="avail-solar-Monsoon" class="avail-input" min="0" max="1" step="0.01"></td>
-                      <td><input type="number" id="avail-solar-PostMonsoon" class="avail-input" min="0" max="1" step="0.01"></td>
-                    </tr>
-                    <tr>
-                      <td>Hydro</td>
-                      <td><input type="number" id="avail-hydro-Winter" class="avail-input" min="0" max="1" step="0.01"></td>
-                      <td><input type="number" id="avail-hydro-PreMonsoon" class="avail-input" min="0" max="1" step="0.01"></td>
-                      <td><input type="number" id="avail-hydro-Monsoon" class="avail-input" min="0" max="1" step="0.01"></td>
-                      <td><input type="number" id="avail-hydro-PostMonsoon" class="avail-input" min="0" max="1" step="0.01"></td>
-                    </tr>
-                    <tr>
-                      <td>Gas</td>
-                      <td><input type="number" id="avail-gas-Winter" class="avail-input" min="0" max="1" step="0.01"></td>
-                      <td><input type="number" id="avail-gas-PreMonsoon" class="avail-input" min="0" max="1" step="0.01"></td>
-                      <td><input type="number" id="avail-gas-Monsoon" class="avail-input" min="0" max="1" step="0.01"></td>
-                      <td><input type="number" id="avail-gas-PostMonsoon" class="avail-input" min="0" max="1" step="0.01"></td>
-                    </tr>
-                    <tr>
-                      <td>Coal</td>
-                      <td><input type="number" id="avail-coal-Winter" class="avail-input" min="0" max="1" step="0.01"></td>
-                      <td><input type="number" id="avail-coal-PreMonsoon" class="avail-input" min="0" max="1" step="0.01"></td>
-                      <td><input type="number" id="avail-coal-Monsoon" class="avail-input" min="0" max="1" step="0.01"></td>
-                      <td><input type="number" id="avail-coal-PostMonsoon" class="avail-input" min="0" max="1" step="0.01"></td>
-                    </tr>
-                    <tr>
-                      <td>Imports</td>
-                      <td><input type="number" id="avail-imports-Winter" class="avail-input" min="0" max="1" step="0.01"></td>
-                      <td><input type="number" id="avail-imports-PreMonsoon" class="avail-input" min="0" max="1" step="0.01"></td>
-                      <td><input type="number" id="avail-imports-Monsoon" class="avail-input" min="0" max="1" step="0.01"></td>
-                      <td><input type="number" id="avail-imports-PostMonsoon" class="avail-input" min="0" max="1" step="0.01"></td>
-                    </tr>
-                    <tr>
-                      <td>Liq. Fuel</td>
-                      <td><input type="number" id="avail-liquid_fuel-Winter" class="avail-input" min="0" max="1" step="0.01"></td>
-                      <td><input type="number" id="avail-liquid_fuel-PreMonsoon" class="avail-input" min="0" max="1" step="0.01"></td>
-                      <td><input type="number" id="avail-liquid_fuel-Monsoon" class="avail-input" min="0" max="1" step="0.01"></td>
-                      <td><input type="number" id="avail-liquid_fuel-PostMonsoon" class="avail-input" min="0" max="1" step="0.01"></td>
-                    </tr>
-                  </tbody>
-                </table>
+                <div class="model-subsection-label" style="margin-top:14px;">Marginal Cost ($/MWh)</div>
+                <div class="model-table-wrap">
+                  <table class="model-table">
+                    <tbody id="model-cost-body"></tbody>
+                  </table>
+                </div>
+
+                <div class="model-subsection-label" style="margin-top:14px;">Seasonal Availability (α)</div>
+                <p class="model-note" style="margin-bottom:6px;">Full heatmap shown in the dashboard charts.</p>
+                <div class="model-table-wrap">
+                  <table class="model-table avail-ro-table">
+                    <thead>
+                      <tr><th>Source</th><th>Win</th><th>Pre</th><th>Mon</th><th>Post</th></tr>
+                    </thead>
+                    <tbody id="model-avail-body"></tbody>
+                  </table>
+                </div>
               </div>
             </div>
           </div>

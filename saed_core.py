@@ -107,15 +107,23 @@ def calibrate(df: pd.DataFrame) -> Calibration:
         diurnal[s] = col / col.mean()
 
     # ---- firm capacity C_g and seasonal availability alpha_{g,s} ----
-    # Firm seasonally-available output = P95 of observed output in that season.
-    # This implicitly encodes fuel-supply (gas), water (hydro) and maintenance
-    # limits as they actually manifest -- the binding reality in the BD grid.
-    #   C_g          = max_s  P95_g(s)           (best firm delivery)
-    #   alpha_{g,s}  = P95_g(s) / C_g  in [0,1]  (seasonal availability factor)
-    p95_season = {g: {s: float(np.nanpercentile(df.loc[df.season == s, g], 95))
-                      for s in SEASONS} for g in SOURCES}
-    capacity = {g: max(p95_season[g].values()) for g in SOURCES}
-    avail = {g: {s: (p95_season[g][s] / capacity[g] if capacity[g] > 0 else 0.0)
+    # C_g = P99 of hourly output across all seasons (robust installed-capacity
+    #        ceiling that excludes extreme data-entry errors without per-source
+    #        hardcoding; stable to a handful of corrupt rows).
+    # alpha_{g,s} = seasonal P90 / C_g  (robust high-delivery fraction per season).
+    #
+    # Choosing P90 (not P95) as the seasonal numerator means:
+    #   - For solar (half the hours are night-time zeros), P90 still falls in the
+    #     daytime range and captures cloud/irradiance variability across seasons.
+    #   - For dispatchable sources, P90 avoids the occasional maintenance outlier.
+    # Dividing by the overall P99 (not max seasonal P95) ensures NO season is
+    # forced to alpha=1.0 by construction, eliminating the normalisation artifact.
+    overall_p99 = {g: float(np.nanpercentile(df[g].dropna(), 99)) for g in SOURCES}
+    capacity = {g: max(overall_p99[g], 1e-6) for g in SOURCES}
+    seasonal_p90 = {g: {s: float(np.nanpercentile(df.loc[df.season == s, g].dropna(), 90))
+                        for s in SEASONS} for g in SOURCES}
+    avail = {g: {s: min(max(seasonal_p90[g][s] / capacity[g], 0.0), 1.0)
+                 if capacity[g] > 1e-6 else 0.0
                  for s in SEASONS} for g in SOURCES}
 
     # ---- solar diurnal availability psi(h)  (normalized to peak 1) ----

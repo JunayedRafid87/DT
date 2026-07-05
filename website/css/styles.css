@@ -503,6 +503,83 @@ input[type="range"]:focus-visible::-webkit-slider-thumb {
   box-shadow: 0 0 0 2px rgba(13,148,136,0.15);
 }
 
+/* ── Model Prediction Tables (read-only) ────────────────────────── */
+.model-note {
+  font-size: 10.5px;
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin: 0 0 8px;
+  font-style: italic;
+}
+.model-subsection-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--navy);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 6px;
+}
+.model-table-wrap {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xs);
+  overflow: hidden;
+}
+.model-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+}
+.model-table td {
+  padding: 5px 8px;
+  color: var(--text);
+  border-bottom: 1px solid var(--border-light);
+}
+.model-table tr:last-child td {
+  border-bottom: none;
+}
+.model-table td:first-child {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+}
+.model-val {
+  text-align: right;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--navy);
+  font-weight: 600;
+}
+.avail-ro-table {
+  font-size: 10px;
+}
+.avail-ro-table th {
+  font-weight: 600;
+  color: var(--text-muted);
+  padding: 4px 2px;
+  text-align: center;
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+}
+.avail-ro-table th:first-child { text-align: left; padding-left: 8px; }
+.avail-ro-table td:first-child {
+  text-align: left;
+  font-weight: 600;
+  padding-left: 8px;
+  color: var(--text);
+}
+.avail-ro-cell {
+  text-align: center;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 700;
+  padding: 4px 2px;
+}
+
 /* ── Reset Button ───────────────────────────────────────────────── */
 .btn-reset {
   width: 100%;
@@ -1116,10 +1193,28 @@ body.dark-theme .hero {
 }
 
 body.dark-theme .control-select,
-body.dark-theme .avail-input,
 body.dark-theme .btn-reset {
   background: #1f2937;
   border-color: #374151;
+  color: #f3f4f6;
+}
+body.dark-theme .model-table-wrap {
+  background: #1f2937;
+  border-color: #374151;
+}
+body.dark-theme .model-table td {
+  border-bottom-color: #374151;
+  color: #f3f4f6;
+}
+body.dark-theme .model-val {
+  color: #e5e7eb;
+}
+body.dark-theme .avail-ro-table th {
+  background: #1f2937;
+  border-bottom-color: #374151;
+  color: #9ca3af;
+}
+body.dark-theme .avail-ro-table td:first-child {
   color: #f3f4f6;
 }
 

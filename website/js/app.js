@@ -26,44 +26,17 @@
 
   // ── Read all control values ──────────────────────────────────────
   function readControls() {
-    const SAED = window.SAED;
-
     const season = document.getElementById('select-season').value;
     const year = parseInt(document.getElementById('slider-year').value);
     const growth = parseFloat(document.getElementById('slider-growth').value);
     const stochastic = document.getElementById('chk-stochastic').checked;
     const reserveFloor = parseFloat(document.getElementById('slider-reserve').value);
 
-    // Capacity overrides
-    const capacity = {};
-    SAED.SOURCES.forEach(src => {
-      const el = document.getElementById(`slider-cap-${src}`);
-      if (el) capacity[src] = parseFloat(el.value);
-    });
-
-    // Cost overrides
-    const cost = {};
-    SAED.SOURCES.forEach(src => {
-      const el = document.getElementById(`slider-cost-${src}`);
-      if (el) cost[src] = parseFloat(el.value);
-    });
-
-    // Availability overrides
-    const avail = {};
-    SAED.SOURCES.forEach(src => {
-      avail[src] = {};
-      SAED.SEASONS.forEach(season => {
-        const el = document.getElementById(`avail-${src}-${season}`);
-        if (el) avail[src][season] = parseFloat(el.value) || 0;
-      });
-    });
-
+    // Firm capacity, marginal cost, and seasonal availability are model
+    // predictions derived from calibration — not user-adjustable.
     return {
       season, year, growth, stochastic, reserveFloor,
       overrides: {
-        capacity,
-        cost,
-        avail,
         growth: growth / 100,
         reserveFrac: reserveFloor / 100
       }
@@ -182,38 +155,59 @@
       document.getElementById('val-reserve').textContent = '8.0%';
     }
 
-    // Capacity sliders
-    SAED.SOURCES.forEach(src => {
-      const el = document.getElementById(`slider-cap-${src}`);
-      const valEl = document.getElementById(`val-cap-${src}`);
-      if (el && cal.capacity[src] !== undefined) {
-        const cap = Math.round(cal.capacity[src]);
-        el.max = cap * 2;
-        el.value = cap;
-        if (valEl) valEl.textContent = cap.toLocaleString() + ' MW';
-      }
-    });
+    // Populate read-only model prediction tables
+    populateModelTables(cal);
+  }
 
-    // Cost sliders
-    SAED.SOURCES.forEach(src => {
-      const el = document.getElementById(`slider-cost-${src}`);
-      const valEl = document.getElementById(`val-cost-${src}`);
-      if (el) {
-        const cost = SAED.MARGINAL_COST[src];
-        el.value = cost;
-        if (valEl) valEl.textContent = '$' + cost;
-      }
-    });
+  // ── Populate read-only model prediction tables ───────────────────
+  function populateModelTables(cal) {
+    const SAED = window.SAED;
+    const SOURCE_LABELS = {
+      solar: 'Solar', hydro: 'Hydro', gas: 'Natural Gas',
+      coal: 'Coal', imports: 'Imports', liquid_fuel: 'Liquid Fuel'
+    };
+    const SOURCE_COLORS = SAED.SOURCE_COLORS;
 
-    // Availability matrix
-    SAED.SOURCES.forEach(src => {
-      SAED.SEASONS.forEach(season => {
-        const el = document.getElementById(`avail-${src}-${season}`);
-        if (el && cal.avail && cal.avail[src]) {
-          el.value = (cal.avail[src][season] || 0).toFixed(2);
-        }
-      });
-    });
+    // Firm capacity table
+    const capBody = document.getElementById('model-cap-body');
+    if (capBody) {
+      capBody.innerHTML = SAED.SOURCES.map(src => {
+        const cap = Math.round(cal.capacity[src] || 0);
+        return `<tr>
+          <td><span class="source-dot" style="background:${SOURCE_COLORS[src]};"></span>${SOURCE_LABELS[src]}</td>
+          <td class="model-val">${cap.toLocaleString()} MW</td>
+        </tr>`;
+      }).join('');
+    }
+
+    // Marginal cost table
+    const costBody = document.getElementById('model-cost-body');
+    if (costBody) {
+      costBody.innerHTML = SAED.SOURCES.map(src => {
+        const cost = cal.cost[src] !== undefined ? cal.cost[src] : SAED.MARGINAL_COST[src];
+        return `<tr>
+          <td><span class="source-dot" style="background:${SOURCE_COLORS[src]};"></span>${SOURCE_LABELS[src]}</td>
+          <td class="model-val">$${cost}/MWh</td>
+        </tr>`;
+      }).join('');
+    }
+
+    // Seasonal availability table
+    const availBody = document.getElementById('model-avail-body');
+    if (availBody && cal.avail) {
+      availBody.innerHTML = SAED.SOURCES.map(src => {
+        const cells = SAED.SEASONS.map(s => {
+          const v = cal.avail[src] ? (cal.avail[src][s] || 0) : 0;
+          const r = Math.round(13 + v * (0 - 13));
+          const g = Math.round(148 + v * (100 - 148));
+          const b = Math.round(136 + v * (80 - 136));
+          const bg = `rgb(${r},${g},${b})`;
+          const fg = v > 0.45 ? '#fff' : '#1a1a2e';
+          return `<td class="avail-ro-cell" style="background:${bg};color:${fg};">${v.toFixed(2)}</td>`;
+        }).join('');
+        return `<tr><td>${SOURCE_LABELS[src]}</td>${cells}</tr>`;
+      }).join('');
+    }
   }
 
   // ── Tab Switching ────────────────────────────────────────────────
@@ -288,39 +282,6 @@
         debouncedUpdate();
       });
     }
-
-    // Capacity sliders
-    const SAED = window.SAED;
-    SAED.SOURCES.forEach(src => {
-      const el = document.getElementById(`slider-cap-${src}`);
-      if (el) {
-        el.addEventListener('input', () => {
-          const valEl = document.getElementById(`val-cap-${src}`);
-          if (valEl) valEl.textContent = parseInt(el.value).toLocaleString() + ' MW';
-          debouncedUpdate();
-        });
-      }
-    });
-
-    // Cost sliders
-    SAED.SOURCES.forEach(src => {
-      const el = document.getElementById(`slider-cost-${src}`);
-      if (el) {
-        el.addEventListener('input', () => {
-          const valEl = document.getElementById(`val-cost-${src}`);
-          if (valEl) valEl.textContent = '$' + parseFloat(el.value).toFixed(0);
-          debouncedUpdate();
-        });
-      }
-    });
-
-    // Availability number inputs
-    SAED.SOURCES.forEach(src => {
-      SAED.SEASONS.forEach(season => {
-        const el = document.getElementById(`avail-${src}-${season}`);
-        if (el) el.addEventListener('change', debouncedUpdateSlow);
-      });
-    });
 
     // Reset button
     const btnReset = document.getElementById('btn-reset');
