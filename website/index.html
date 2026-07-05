@@ -29,17 +29,23 @@
   <!-- Sticky Tabs Navigation -->
   <nav class="nav-tabs">
     <div class="nav-tabs-inner">
-      <button class="nav-tab active" data-tab="dashboard">
-        📊 The Twin Dashboard
-        <div class="tab-desc">Parameters & real-time charts</div>
-      </button>
-      <button class="nav-tab" data-tab="pipeline">
-        📋 Data Pipeline
-        <div class="tab-desc">Interactive processing flowchart</div>
-      </button>
-      <button class="nav-tab" data-tab="about">
-        💡 Key Findings
-        <div class="tab-desc">Grid physics & research results</div>
+      <div class="nav-tabs-list">
+        <button class="nav-tab active" data-tab="dashboard">
+          📊 The Twin Dashboard
+          <div class="tab-desc">Parameters & real-time charts</div>
+        </button>
+        <button class="nav-tab" data-tab="pipeline">
+          📋 Data Pipeline
+          <div class="tab-desc">Interactive processing flowchart</div>
+        </button>
+        <button class="nav-tab" data-tab="about">
+          💡 Key Findings
+          <div class="tab-desc">Grid physics & research results</div>
+        </button>
+      </div>
+      <button id="btn-dark-mode" class="dark-mode-toggle" aria-label="Toggle dark mode">
+        <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+        <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none;"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
       </button>
     </div>
   </nav>
@@ -103,10 +109,10 @@
                 </div>
 
                 <div class="control-row toggle-wrap">
-                  <div class="toggle-switch">
+                  <label class="toggle-switch">
                     <input type="checkbox" id="chk-stochastic">
                     <span class="toggle-slider"></span>
-                  </div>
+                  </label>
                   <label class="control-label" for="chk-stochastic" style="margin-bottom:0; cursor:pointer;">Stochastic Noise</label>
                 </div>
 

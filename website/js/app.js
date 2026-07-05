@@ -326,6 +326,10 @@
     const btnReset = document.getElementById('btn-reset');
     if (btnReset) btnReset.addEventListener('click', reset);
 
+    // Dark Mode Toggle
+    const btnDarkMode = document.getElementById('btn-dark-mode');
+    if (btnDarkMode) btnDarkMode.addEventListener('click', toggleDarkMode);
+
     // Window resize for canvas charts
     window.addEventListener('resize', debounce(() => {
       if (simResults && currentCal) {
@@ -343,6 +347,30 @@
     }, 250));
   }
 
+  // ── Toggle Dark Mode ─────────────────────────────────────────────
+  function toggleDarkMode() {
+    const isDark = document.body.classList.toggle('dark-theme');
+    const sunIcon = document.querySelector('#btn-dark-mode .sun-icon');
+    const moonIcon = document.querySelector('#btn-dark-mode .moon-icon');
+    
+    if (sunIcon && moonIcon) {
+      if (isDark) {
+        sunIcon.style.display = 'none';
+        moonIcon.style.display = 'block';
+      } else {
+        sunIcon.style.display = 'block';
+        moonIcon.style.display = 'none';
+      }
+    }
+    
+    if (window.DashboardCharts) {
+      if (typeof Chart !== 'undefined') {
+        Chart.defaults.color = isDark ? '#9ca3af' : '#64748b';
+      }
+      update();
+    }
+  }
+
   // ── Reset ────────────────────────────────────────────────────────
   function reset() {
     if (!rawCalData || !window.SAED) return;
@@ -350,6 +378,17 @@
     initControls(cal);
     document.getElementById('select-season').value = 'all';
     document.getElementById('chk-stochastic').checked = false;
+    // Clear dark mode on reset to be clean
+    document.body.classList.remove('dark-theme');
+    const sunIcon = document.querySelector('#btn-dark-mode .sun-icon');
+    const moonIcon = document.querySelector('#btn-dark-mode .moon-icon');
+    if (sunIcon && moonIcon) {
+      sunIcon.style.display = 'block';
+      moonIcon.style.display = 'none';
+    }
+    if (typeof Chart !== 'undefined') {
+      Chart.defaults.color = '#64748b';
+    }
     update();
   }
 
