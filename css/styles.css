@@ -641,22 +641,40 @@ input[type="range"]:focus-visible::-webkit-slider-thumb {
   padding: 32px 24px 48px;
 }
 
+#flowchart-container {
+  width: 100%;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+#flowchart-container::-webkit-scrollbar {
+  height: 6px;
+}
+#flowchart-container::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
 .flowchart-wrapper {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   padding: 32px 0;
   margin-bottom: 32px;
+  min-width: max-content;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .flow-node {
   background: var(--bg-card);
   border: 2px solid var(--border);
   border-radius: var(--radius);
-  padding: 18px 22px;
-  min-width: 140px;
+  padding: 12px 14px;
+  min-width: 120px;
   text-align: center;
   cursor: pointer;
   transition: all var(--transition);
@@ -699,7 +717,7 @@ input[type="range"]:focus-visible::-webkit-slider-thumb {
   position: relative;
 }
 .flow-arrow-line {
-  width: 40px;
+  width: 24px;
   height: 2px;
   background-image: repeating-linear-gradient(
     90deg,
@@ -1044,6 +1062,7 @@ input[type="range"]:focus-visible::-webkit-slider-thumb {
   .flowchart-wrapper {
     flex-direction: column;
     gap: 0;
+    min-width: auto;
   }
   .flow-arrow {
     transform: rotate(90deg);
