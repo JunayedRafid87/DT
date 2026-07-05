@@ -93,12 +93,31 @@ class Calibration:
 
 
 def calibrate(df: pd.DataFrame) -> Calibration:
-    # ---- seasonal base demand & volatility ----
-    base_demand = df.groupby("season")["demand_mw"].mean().to_dict()
-    noise_sd = (df.groupby("season")["demand_mw"].std()
-                / df.groupby("season")["demand_mw"].mean()).to_dict()
+    # ---- growth trend and base year (all years, for robust trend estimate) ----
+    yr_peak = df.groupby("year")["demand_mw"].max()
+    yr_peak = yr_peak[yr_peak > 0]
+    yrs = yr_peak.index.values.astype(float)
+    growth = float(np.exp(np.polyfit(yrs, np.log(yr_peak.values), 1)[0]) - 1)
+    base_year = int(yrs.max())
 
-    # ---- normalized diurnal profile phi_s(h)  (mean over hours = 1) ----
+    # ---- anchor base demand and capacity to the most recent two years ----
+    # Using all-time mean as base_demand would give ~70% of the actual current
+    # demand level (because earlier low-demand years drag the average down).
+    # This causes the growth-multiplier for year=base_year to start from the
+    # wrong level, making predictions look ~30% optimistic for near years and
+    # catastrophically pessimistic for the far future.
+    # Fix: use only the most recent 2 years as the calibration window for
+    # base_demand, noise, capacity, and availability — this correctly anchors
+    # the simulation at the actual current grid state.
+    max_yr = base_year
+    df_rec = df[df["year"] >= max_yr - 1]   # last 2 years of data
+
+    # ---- seasonal base demand & volatility (recent window) ----
+    base_demand = df_rec.groupby("season")["demand_mw"].mean().to_dict()
+    noise_sd = (df_rec.groupby("season")["demand_mw"].std()
+                / df_rec.groupby("season")["demand_mw"].mean()).to_dict()
+
+    # ---- normalized diurnal profile phi_s(h)  (all years → larger sample) ----
     diurnal = {}
     piv = df.pivot_table(index="hour", columns="season",
                          values="demand_mw", aggfunc="mean")
@@ -107,37 +126,29 @@ def calibrate(df: pd.DataFrame) -> Calibration:
         diurnal[s] = col / col.mean()
 
     # ---- firm capacity C_g and seasonal availability alpha_{g,s} ----
-    # C_g = P99 of hourly output across all seasons (robust installed-capacity
-    #        ceiling that excludes extreme data-entry errors without per-source
-    #        hardcoding; stable to a handful of corrupt rows).
-    # alpha_{g,s} = seasonal P90 / C_g  (robust high-delivery fraction per season).
-    #
-    # Choosing P90 (not P95) as the seasonal numerator means:
-    #   - For solar (half the hours are night-time zeros), P90 still falls in the
-    #     daytime range and captures cloud/irradiance variability across seasons.
-    #   - For dispatchable sources, P90 avoids the occasional maintenance outlier.
-    # Dividing by the overall P99 (not max seasonal P95) ensures NO season is
-    # forced to alpha=1.0 by construction, eliminating the normalisation artifact.
-    overall_p99 = {g: float(np.nanpercentile(df[g].dropna(), 99)) for g in SOURCES}
+    # C_g = P99 of recent hourly output (represents current installed fleet;
+    #        all-data P99 under-counts because early years had far less capacity).
+    # alpha_{g,s} = seasonal P90 (recent) / C_g.
+    # Using P90 as numerator:
+    #   - For solar, P90 of all 24-h records (incl. night zeros) still falls in
+    #     the daytime range, capturing cloud/irradiance variability by season.
+    #   - For dispatchable sources, P90 avoids occasional maintenance outliers.
+    # Using recent overall P99 (not max seasonal P95) as C_g ensures no season
+    # is forced to alpha=1.0 by construction.
+    overall_p99 = {g: float(np.nanpercentile(df_rec[g].dropna(), 99)) for g in SOURCES}
     capacity = {g: max(overall_p99[g], 1e-6) for g in SOURCES}
-    seasonal_p90 = {g: {s: float(np.nanpercentile(df.loc[df.season == s, g].dropna(), 90))
+    seasonal_p90 = {g: {s: float(np.nanpercentile(
+                            df_rec.loc[df_rec.season == s, g].dropna(), 90))
                         for s in SEASONS} for g in SOURCES}
     avail = {g: {s: min(max(seasonal_p90[g][s] / capacity[g], 0.0), 1.0)
                  if capacity[g] > 1e-6 else 0.0
                  for s in SEASONS} for g in SOURCES}
 
-    # ---- solar diurnal availability psi(h)  (normalized to peak 1) ----
+    # ---- solar diurnal availability psi(h)  (all years → smoother shape) ----
     solar_h = df.pivot_table(index="hour", values="solar",
                              aggfunc="mean").reindex(range(24))["solar"]
     solar_h = solar_h.fillna(0).values
     solar_shape = solar_h / solar_h.max() if solar_h.max() > 0 else solar_h
-
-    # ---- annual demand growth (log-linear on yearly peak) ----
-    yr_peak = df.groupby("year")["demand_mw"].max()
-    yr_peak = yr_peak[yr_peak > 0]
-    yrs = yr_peak.index.values.astype(float)
-    growth = float(np.exp(np.polyfit(yrs, np.log(yr_peak.values), 1)[0]) - 1)
-    base_year = int(yrs.max())
 
     return Calibration(base_demand, diurnal, noise_sd, capacity, avail,
                        solar_shape, growth, base_year)

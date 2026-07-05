@@ -55,16 +55,18 @@
     const totalCO2 = filtered.reduce((a, r) => a + r.co2_t, 0);
     const totalServed = filtered.reduce((a, r) => a + r.served, 0);
     const minReserve = Math.min(...filtered.map(r => r.reserve_margin));
-    const totalShed = filtered.reduce((a, r) => a + r.load_shed, 0);
+    // Peak-hour load shed: the worst single hour (MW) — comparable to an
+    // actual grid metric, unlike summing 96 × MW which conflates hours and MW.
+    const peakShed = Math.max(...filtered.map(r => r.load_shed));
 
     return {
       dailyCost: totalCost / 1000,
       dailyCO2: totalCO2 / 1000,
       avgCost: totalServed > 0 ? totalCost / totalServed : 0,
       minReserve: minReserve * 100,
-      loadShed: totalShed,
+      loadShed: peakShed,
       reserveOk: (minReserve * 100) >= reserveFloor,
-      shedOk: totalShed <= 0.01
+      shedOk: peakShed <= 0.01
     };
   }
 

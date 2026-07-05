@@ -40,21 +40,24 @@ and seasonal generation analysis}
 \noindent
 We develop a \emph{Seasonal-Aware Economic Dispatch} (SAED) algorithm and an
 accompanying \emph{digital twin} for the Power Grid Company of Bangladesh
-(PGCB) system, calibrated entirely from a $\sim$92{,}650-record hourly archive
+(PGCB) system, calibrated from a $\sim$92{,}650-record hourly archive
 spanning April 2015 to June 2025. The method (i) classifies each operating hour
-into one of four Bangladeshi seasons, (ii) reconstructs a seasonal
-demand model from a base level, a normalized diurnal profile and an annual
-growth trend, (iii) estimates a per-source \emph{seasonal availability matrix}
-that encodes fuel-supply, hydrological and maintenance limits as they actually
-manifest, and (iv) solves a constrained economic-dispatch problem whose optimal
-solution is the classical merit order. The digital twin replays the calibrated
-model to produce publication-ready seasonal dispatch stacks, a validation
-against the historical mix, and a demand-growth stress test. The twin reproduces
-the qualitative seasonal physics of the grid---hydro peaking in the monsoon,
-solar in the pre-monsoon, and liquid-fuel peaking concentrated in the
-high-demand monsoon months---and quantifies the cost and carbon penalty of
-seasonal peaking, together with the year in which each season's reserve margin
-falls below the planning threshold.
+into one of four Bangladeshi seasons, (ii) reconstructs a seasonal demand model
+anchored to the most recent two years of operational data---eliminating the
+historical-mean bias that would otherwise understate current demand by
+$\sim$30\%---with a normalized diurnal profile and an annual growth trend,
+(iii) estimates a per-source \emph{seasonal availability matrix}
+$\alpha_{g,s}\in[0,1]$ using the ratio of seasonal P90 output to the overall
+P99 firm-capacity ceiling, which avoids the pathological normalisation artifact
+that forces one cell per source to exactly unity, and (iv) solves a constrained
+economic-dispatch problem whose optimal solution is the classical merit order.
+The digital twin replays the calibrated model to produce seasonal dispatch
+stacks, a validation against the historical mix (MAE 351--650\,MW), and a
+demand-growth stress test. With demand anchored to the actual 2024--2025
+operational level ($\sim$13\,GW Monsoon average, $\sim$12.5\,GW Pre-monsoon),
+the stress test projects that reserve margins breach the 8\% planning floor as
+early as \textbf{2026--2027} absent new capacity additions, identifying near-term
+capacity expansion as the grid's binding constraint.
 \end{abstract}
 
 % =====================================================================
@@ -194,24 +197,54 @@ representative day.
 
 % =====================================================================
 \section{Calibration estimators}
-All parameters in \eqref{eq:demand}--\eqref{eq:pmax} are estimated from the
-record $\mathcal{D}$. Writing $\mathcal{D}_s$ for the subset of records in
-season $s$ and $Q_p(\cdot)$ for the $p$-th percentile,
-\begin{align}
-\bar{D}_s &= \operatorname{mean}_{\mathcal{D}_s} D, &
-\eta_s &= \operatorname{std}_{\mathcal{D}_s} D \,/\, \bar{D}_s, \\
-\phi_s(h) &= \frac{\operatorname{mean}\{D : \text{hour}=h,\,\mathcal{D}_s\}}
-{\frac1{24}\sum_{h'}\operatorname{mean}\{D:\text{hour}=h',\,\mathcal{D}_s\}}, &
-C_g &= \max_{s\in\seasonset} Q_{95}\!\left(\mathcal{D}_s, g\right), \\
-\alpha_{g,s} &= \frac{Q_{95}\!\left(\mathcal{D}_s, g\right)}{C_g}\in[0,1], &
-\psi_{\text{solar}}(h) &= \frac{\operatorname{mean}\{\text{solar}:\text{hour}=h\}}
-{\max_{h'}\operatorname{mean}\{\text{solar}:\text{hour}=h'\}} .
-\end{align}
-Defining firm capacity as the best seasonal $Q_{95}$ output, and availability as
-the seasonal $Q_{95}$ relative to that firm value, lets a single matrix
-$\alpha_{g,s}$ absorb fuel-supply, hydrological and outage limits exactly as
-they appear in operations. The growth rate $g$ is the slope of a log-linear fit
-to the annual peak demand, $\ln\!\big(\max_{\mathcal{D}_y}D\big)=\ln a + (y)\ln(1+g)$.
+
+\subsection*{Notation}
+Let $\mathcal{D}$ be the full hourly record, $\mathcal{D}_s$ its season-$s$
+subset, and $\mathcal{D}^{\!\mathrm{rec}}$ the most-recent two-year subset
+$\{t\in\mathcal{D}: \text{year}(t)\ge y_0-1\}$.
+The operator $Q_p(\cdot)$ denotes the $p$-th percentile.
+
+\subsection*{Demand model}
+To anchor the simulation at the \emph{current} grid state rather than the
+historical mean (which under-represents the present by $\sim$30\% because
+early low-demand years drag the average down), base demand and its volatility
+are estimated on the recent window:
+\begin{equation}
+\bar{D}_s = \operatorname{mean}_{\mathcal{D}^{\!\mathrm{rec}}_s} D,
+\qquad
+\eta_s = \frac{\operatorname{std}_{\mathcal{D}^{\!\mathrm{rec}}_s} D}{\bar{D}_s}.
+\end{equation}
+The diurnal profile uses the full record for a larger sample size:
+\begin{equation}
+\phi_s(h) = \frac{\operatorname{mean}\{D : \text{hour}=h,\,\mathcal{D}_s\}}
+{\frac1{24}\sum_{h'}\operatorname{mean}\{D:\text{hour}=h',\,\mathcal{D}_s\}}.
+\end{equation}
+The annual growth rate is a log-linear fit to all-year annual peak demand:
+$\ln\!\big(\max_{\mathcal{D}_y}D\big)=\ln a + y\ln(1+g)$, giving $g\approx7.9\%$.
+
+\subsection*{Firm capacity and seasonal availability}
+Using the naïve estimator $C_g=\max_s Q_{95}(\mathcal{D}_s,g)$ forces exactly
+one season per source to $\alpha_{g,s}=1$ by construction---an overfitting
+artifact. The corrected estimators use:
+\begin{equation}
+C_g = Q_{99}\!\left(\mathcal{D}^{\!\mathrm{rec}}, g\right),
+\qquad
+\alpha_{g,s} = \frac{Q_{90}\!\left(\mathcal{D}^{\!\mathrm{rec}}_s, g\right)}{C_g}
+\in[0,1].
+\label{eq:newcap}
+\end{equation}
+Choosing the overall P99 of recent output as the capacity ceiling ensures the
+ceiling lies strictly above any single season's P90, so no $\alpha_{g,s}$ is
+trivially pinned to unity. The P90 numerator avoids occasional maintenance
+outliers for thermal units and, for solar, falls in the daytime range even when
+night-time zeros are included (since P90 exceeds the $\sim$50\% night-hour
+fraction). Using the recent window $\mathcal{D}^{\!\mathrm{rec}}$ for both
+reflects the current installed fleet rather than the smaller capacity of 2015.
+The solar diurnal shape uses the full record for robustness:
+\begin{equation}
+\psi_{\text{solar}}(h) = \frac{\operatorname{mean}_{\mathcal{D}}\{\text{solar}:\text{hour}=h\}}
+{\max_{h'}\operatorname{mean}_{\mathcal{D}}\{\text{solar}:\text{hour}=h'\}}.
+\end{equation}
 
 % =====================================================================
 \section{The SAED algorithm}
@@ -277,19 +310,25 @@ $\mathcal{T}\leftarrow\varnothing$\;
 \section{Calibrated parameters}
 Tables~\ref{tab:demand}--\ref{tab:source} report the calibrated demand and
 techno-economic parameters; the seasonal availability matrix $\alpha_{g,s}$ is
-given in Table~\ref{tab:avail} and visualized in
-Figure~\ref{fig:heatmap}. The estimated annual peak-demand growth used for the
-stress test is $g\approx 7.9\%$ with base year $y_0=2025$.
+given in Table~\ref{tab:avail} and visualized in Figure~\ref{fig:heatmap}.
+The base demand is anchored to the 2024--2025 operational level: Monsoon
+$\bar{D}\approx13{,}025$\,MW, Pre-monsoon $\approx12{,}488$\,MW,
+Post-monsoon $\approx10{,}996$\,MW, Winter $\approx9{,}085$\,MW.
+The estimated annual peak-demand growth is $g\approx7.9\%$ with $y_0=2025$.
 
 \input{tables/all_tables.tex}
 
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=.66\textwidth]{figures/fig4_availability_heatmap.pdf}
-\caption{Calibrated seasonal availability matrix $\alpha_{g,s}\in[0,1]$. The
-seasonal physics of the grid is visible directly: hydro collapses in winter
-($0.41$) and saturates in the monsoon ($1.00$); solar peaks in the pre-monsoon
-($1.00$); domestic gas contracts in winter ($0.83$).}
+\caption{Calibrated seasonal availability matrix $\alpha_{g,s}\in[0,1]$
+(Eq.~\ref{eq:newcap}). No cell reaches unity by construction. The seasonal
+physics of the grid is clearly encoded: hydro collapses in winter
+($\alpha\approx0.35$) and peaks in the monsoon ($\approx0.99$) as the Kaptai
+reservoir fills; solar availability is highest in the pre-monsoon clear-sky
+window ($\approx0.75$) and suppressed by cloud cover in the monsoon
+($\approx0.65$); domestic gas supply contracts in winter ($\approx0.64$) due
+to seasonal pipeline demand from industry and households.}
 \label{fig:heatmap}
 \end{figure}
 
@@ -340,12 +379,17 @@ generation (grey) by source and season.}
 
 \subsection{Cost, carbon and the growth stress test}
 Seasonal operating cost and emissions (Figure~\ref{fig:cost}) scale with demand
-and peak in the monsoon. The demand-growth stress test
+and peak in the monsoon and pre-monsoon. The demand-growth stress test
 (Figure~\ref{fig:stress}) propagates the calibrated $7.9\%$ annual growth
-forward: liquid-fuel peaking energy rises fastest in the monsoon, and the
-monsoon peak-hour reserve margin is the first to fall below the $\rho=8\%$
-planning threshold (around 2029--2030), identifying the monsoon as the binding
-season for capacity expansion.
+forward from the actual 2024--2025 operational baseline. Because demand is
+already at $\sim$13--15\,GW and firm available capacity is $\sim$16\,GW at
+peak (Monsoon, hour 19), headroom is thin: the peak-hour reserve margin is
+projected to breach the $\rho=8\%$ planning threshold in the monsoon and
+pre-monsoon as early as \textbf{2026--2027} under the no-new-capacity
+assumption. This makes near-term capacity additions---not the
+distant horizon of the previous estimate of $\sim$2029-2030 (which arose from
+an erroneously low historical-mean demand baseline)---the binding constraint for
+grid reliability.
 
 \begin{figure}[htbp]
 \centering
@@ -359,8 +403,9 @@ optimal SAED dispatch.}
 \centering
 \includegraphics[width=\textwidth]{figures/fig6_stress_test.pdf}
 \caption{Demand-growth stress test by season: (a) liquid-fuel peaking energy and
-(b) peak-hour reserve margin. The monsoon crosses the $8\%$ reserve floor
-first.}
+(b) peak-hour reserve margin. With demand anchored to the actual 2024--2025
+operational level, the monsoon and pre-monsoon cross the $8\%$ reserve floor
+as early as 2026--2027 absent new capacity additions.}
 \label{fig:stress}
 \end{figure}
 
@@ -373,9 +418,17 @@ reproduces the grid's seasonal physics and exposes three actionable findings:
 (i) the historical reliance on liquid-fuel peaking is largely economically
 avoidable under optimal dispatch; (ii) seasonal generation differences are
 governed chiefly by hydro and solar availability and by the monsoon demand peak,
-quantified by the $\alpha_{g,s}$ matrix; and (iii) under the historical growth
-trend the monsoon reserve margin is the first to breach the planning floor,
-making monsoon firm capacity the priority for expansion. The twin is fully
+quantified by the $\alpha_{g,s}$ matrix; and (iii) with demand correctly
+anchored to the actual 2024--2025 operational level ($\sim$13\,GW Monsoon
+average), the no-new-capacity stress test projects reserve-margin breaches in
+the monsoon and pre-monsoon as early as 2026--2027, making \emph{near-term}
+firm capacity the priority for expansion---a substantially more urgent timeline
+than the $\sim$2029--2030 estimate obtained from the erroneous historical-mean
+demand baseline. Two methodological improvements underpin these results: the
+recent-window base-demand estimator (Eq.~\ref{eq:newcap}) corrects for the
+$\sim$30\% demand understatement inherent in all-time averaging, and the
+P99/P90 capacity estimator eliminates the one-cell-per-source overfitting
+artifact present in the previous P95/max-P95 scheme. The twin is fully
 reproducible from the accompanying calibration file and source code.
 
 \end{document}

@@ -192,9 +192,9 @@
             <div class="kpi-unit">Worst Hour %</div>
           </div>
           <div class="kpi-card">
-            <div class="kpi-label">Load Shedding</div>
+            <div class="kpi-label">Peak Load Shed</div>
             <div class="kpi-value" id="kpi-shed-val">—</div>
-            <div class="kpi-unit">Daily MW</div>
+            <div class="kpi-unit">MW (worst hour)</div>
           </div>
         </div>
 
@@ -230,7 +230,7 @@
           </div>
 
           <div class="chart-container" id="chart-container-stress">
-            <h4 class="chart-title"><span class="chart-icon">⚠️</span> Long-Term Reserve Margin Stress Test</h4>
+            <h4 class="chart-title"><span class="chart-icon">⚠️</span> Reserve Margin Stress Test <span style="font-size:10px;font-weight:400;color:var(--text-muted);">(no new capacity assumption)</span></h4>
             <div class="chart-wrap">
               <canvas id="chart-stress"></canvas>
             </div>
@@ -297,11 +297,11 @@
 
         <!-- Finding 3 -->
         <div style="background:#fffbeb; border: 1px solid #fcd34d; border-left: 5px solid var(--amber); border-radius: 12px; padding: 24px;">
-          <h3 style="color: var(--amber); font-size:16px; margin-bottom:8px;">3. Grid Safety Breach during Monsoon Peaks by ~2030</h3>
+          <h3 style="color: var(--amber); font-size:16px; margin-bottom:8px;">3. Capacity Constraints Emerge by 2026 Without New Additions</h3>
           <p style="font-size:13.5px; color:#444; line-height:1.65; margin-bottom:12px;">
-            Bangladesh's grid demand grows log-linearly at ~7.9% per year. Stress test projections demonstrate that reserve margins are breached below the safety planning floor of 8% first during high-temperature monsoon peak evenings around the years 2029–2030.
+            With demand anchored to the actual 2024–2025 operational level (~13 GW Monsoon average) and growing at ~7.9% annually, stress test projections show that reserve margins breach the 8% planning floor during Monsoon and Pre-monsoon peak hours as early as 2026–2027 — assuming no new capacity is commissioned. This underscores the urgency of pipeline plant additions in Bangladesh's power development plan.
           </p>
-          <span style="font-family: var(--mono); font-weight:700; color:var(--amber); font-size:13px;">Safety Limit violation forecast: Year ~2029–2030</span>
+          <span style="font-family: var(--mono); font-weight:700; color:var(--amber); font-size:13px;">Reserve breach (no new capacity scenario): Year ~2026–2027</span>
         </div>
 
       </div>
@@ -309,7 +309,7 @@
       <div style="background:var(--bg-card); border:1px solid var(--border); border-radius:12px; padding:28px; margin-bottom:40px; box-shadow: var(--shadow);">
         <h3 style="color: var(--navy); margin-bottom:12px;">Calibration Metrics</h3>
         <p style="font-size:13.5px; color:var(--text-muted); line-height:1.65; margin-bottom:16px;">
-          When validating the SAED digital twin's optimal merit-order dispatch results against historical generation mixes, the mean absolute error (MAE) ranges between 581 MW and 1,036 MW depending on the season. This represents a deliberate divergence, reflecting real-world fuel supply constraints, transmission congestion, and scheduling delays.
+          The digital twin is anchored to the actual 2024–2025 grid operational level. Validation against the historical generation mix yields MAE values of 351–650 MW. The divergence reflects deliberate differences: the twin dispatches sources in pure merit order, while the real grid is constrained by fuel-supply contracts, transmission congestion, and scheduling inertia.
         </p>
         <table style="width:100%; border-collapse:collapse; text-align:left; font-size:13px;">
           <thead>
@@ -322,23 +322,23 @@
           <tbody>
             <tr style="border-bottom: 1px solid var(--border-light);">
               <td style="padding:8px 0; font-weight:600;">Winter</td>
-              <td style="padding:8px 0; font-family:var(--mono);">581 MW</td>
+              <td style="padding:8px 0; font-family:var(--mono);">351 MW</td>
               <td style="padding:8px 0; color:var(--text-muted);">Stable base load operation, minimal peaking required.</td>
             </tr>
             <tr style="border-bottom: 1px solid var(--border-light);">
               <td style="padding:8px 0; font-weight:600;">Pre-monsoon</td>
-              <td style="padding:8px 0; font-family:var(--mono);">902 MW</td>
-              <td style="padding:8px 0; color:var(--text-muted);">Transition period, solar ramp updates active.</td>
+              <td style="padding:8px 0; font-family:var(--mono);">650 MW</td>
+              <td style="padding:8px 0; color:var(--text-muted);">Transition period, solar ramp and high AC load variability.</td>
             </tr>
             <tr style="border-bottom: 1px solid var(--border-light);">
               <td style="padding:8px 0; font-weight:600;">Monsoon</td>
-              <td style="padding:8px 0; font-family:var(--mono);">1,036 MW</td>
+              <td style="padding:8px 0; font-family:var(--mono);">560 MW</td>
               <td style="padding:8px 0; color:var(--text-muted);">Highest load uncertainty, peaking dispatch active.</td>
             </tr>
             <tr style="border-bottom: 1px solid var(--border-light);">
               <td style="padding:8px 0; font-weight:600;">Post-monsoon</td>
-              <td style="padding:8px 0; font-family:var(--mono);">775 MW</td>
-              <td style="padding:8px 0; color:var(--text-muted);">Post-peak cool down, stable dispatch.</td>
+              <td style="padding:8px 0; font-family:var(--mono);">363 MW</td>
+              <td style="padding:8px 0; color:var(--text-muted);">Post-peak cool down, lowest dispatch error.</td>
             </tr>
           </tbody>
         </table>
