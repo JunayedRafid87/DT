@@ -377,13 +377,10 @@
 
     // Sizing
     const dpr = window.devicePixelRatio || 1;
-    const rect = canvas.parentElement.getBoundingClientRect();
-    const W = rect.width;
-    const H = Math.max(rect.height, 260);
+    const W = canvas.clientWidth || 300;
+    const H = canvas.clientHeight || 250;
     canvas.width = W * dpr;
     canvas.height = H * dpr;
-    canvas.style.width = W + 'px';
-    canvas.style.height = H + 'px';
     ctx.scale(dpr, dpr);
 
     const sources = SAED.SOURCES;
@@ -463,13 +460,10 @@
     if (!peakRow) return;
 
     const dpr = window.devicePixelRatio || 1;
-    const rect = canvas.parentElement.getBoundingClientRect();
-    const W = rect.width;
-    const H = Math.max(rect.height, 260);
+    const W = canvas.clientWidth || 300;
+    const H = canvas.clientHeight || 250;
     canvas.width = W * dpr;
     canvas.height = H * dpr;
-    canvas.style.width = W + 'px';
-    canvas.style.height = H + 'px';
     ctx.scale(dpr, dpr);
     ctx.clearRect(0, 0, W, H);
 
