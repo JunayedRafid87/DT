@@ -97,7 +97,7 @@ a:hover { color: var(--teal-dark); }
 
 /* ── Hero Section ───────────────────────────────────────────────── */
 .hero {
-  background: linear-gradient(135deg, #0f1f3a 0%, #1a3a5c 50%, #0f3a2a 100%);
+  background: linear-gradient(135deg, #ea580c 0%, #d97706 50%, #b45309 100%);
   padding: 48px 32px 40px;
   color: #fff;
   position: relative;
@@ -1103,9 +1103,16 @@ body.dark-theme {
   --bg-card: #111827;
   --text: #f3f4f6;
   --text-muted: #9ca3af;
-  --text-light: #4b5563;
+  --text-light: #cbd5e1;
   --border: #374151;
   --border-light: #1f2937;
+  --navy: #f3f4f6;
+  --navy-light: #ffffff;
+  --navy-mid: #e5e7eb;
+}
+
+body.dark-theme .hero {
+  background: linear-gradient(135deg, #0f1f3a 0%, #1a3a5c 50%, #0f3a2a 100%);
 }
 
 body.dark-theme .control-select,
